@@ -22,7 +22,4 @@ public enum VoteType extends Object{
         return direction;
     }
 
-    Class
-    Object
-
 }
