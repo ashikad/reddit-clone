@@ -1,5 +1,6 @@
 package com.example.springredditclone.config;
 
+import com.example.springredditclone.security.JwtFilter;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +27,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
+    private final JwtFilter jwtFiler;
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
@@ -37,9 +39,12 @@ public class SecurityConfig {
         http
                 // ...
                 .csrf((csrf) -> csrf.disable())
-                .authorizeHttpRequests(requests -> requests
+                .authorizeHttpRequests(requests -> {requests
                         .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
-                        .anyRequest().authenticated());
+                        .anyRequest().authenticated();
+                })
+                .addFilterBefore(jwtFiler, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 

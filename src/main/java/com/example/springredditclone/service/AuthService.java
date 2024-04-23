@@ -11,16 +11,20 @@ import com.example.springredditclone.model.VerificationToken;
 import com.example.springredditclone.repository.UserRepository;
 import com.example.springredditclone.repository.VerificationTokenRepository;
 import com.example.springredditclone.security.JwtProvider;
+import io.jsonwebtoken.Jwt;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -40,10 +44,8 @@ public class AuthService {
 
     private final JwtProvider jwtProvider;
 
+    //private final User user;
 
-
-
-    @Transactional
     public void signUp(RegisterRequest registerRequest){
         User user = new User();
         user.setEmail(registerRequest.getEmail());
@@ -75,12 +77,14 @@ public class AuthService {
 
     }
 
-    public AuthenticationResponse verifyAccount(LoginRequest authenticationRequest) {
-        Authentication authenticate = SecurityContextHolder.getContext().getAuthentication();
-        String token = jwtProvider.generateToken(authenticate.getName());
-        boolean flag = jwtProvider.validateToken(token);
-        return new AuthenticationResponse(token, authenticationRequest.getUsername(), flag);
-
+    public void verifyAccount(String token) {
+//        Authentication authenticate = SecurityContextHolder.getContext().getAuthentication();
+//        String token = jwtProvider.generateToken(authenticate.getName());
+//        boolean flag = jwtProvider.validateToken(token);
+//        return new AuthenticationResponse(token, authenticationRequest.getUsername(), flag);
+        Optional<VerificationToken> verificationToken = verificationTokenRepository.findByToken(token);
+        verificationToken.orElseThrow(() -> new SpringRedditException("Invalid Token"));
+        fetchUserAndEnable(verificationToken.get());
       //  Optional<VerificationToken> verificationToken = verificationTokenRepository.findByToken(token);
       //  fetchUserAndEnable(verificationToken.orElseThrow(() -> new SpringRedditException("Invalid Token")));
 
@@ -94,13 +98,26 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public LoginResponse login(LoginRequest loginRequest) {
-        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),loginRequest.getPassword()));
+    public AuthenticationResponse login(LoginRequest loginRequest) {
+//        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(),loginRequest.getPassword()));
+//        SecurityContextHolder.getContext().setAuthentication(authenticate);
+//       // Principal principal = (Principal) authenticate.getPrincipal();
+//
+//        return new LoginResponse(loginRequest.getUsername());
+        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authenticate);
-       // Principal principal = (Principal) authenticate.getPrincipal();
-
-        return new LoginResponse(loginRequest.getUsername());
+        String token = jwtProvider.generateToken(authenticate.getName());
+        return new AuthenticationResponse(token, loginRequest.getUsername());
     }
+
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public User getCurrentUser() {
+        Authentication authenticate = SecurityContextHolder.
+                getContext().getAuthentication();
+        return userRepository.findByUsername(authenticate.getName())
+                .orElseThrow(() -> new UsernameNotFoundException("User name not found - " + authenticate.getName()));
+    }
+
 
 
 }

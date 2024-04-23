@@ -7,8 +7,12 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthenticationResponse {
-    private String authenticationToken;
-    private String username;
-   // private boolean authenticated;
+public class PostRequest {
+
+    private Long postId;
+    private String subredditName;
+    private String postName;
+    private String url;
+    private String description;
+
 }

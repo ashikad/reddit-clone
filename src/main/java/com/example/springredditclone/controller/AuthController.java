@@ -1,5 +1,6 @@
 package com.example.springredditclone.controller;
 
+import com.example.springredditclone.dto.AuthenticationResponse;
 import com.example.springredditclone.dto.LoginResponse;
 import com.example.springredditclone.dto.LoginRequest;
 import com.example.springredditclone.dto.RegisterRequest;
@@ -24,13 +25,13 @@ public class AuthController {
     }
 
     @GetMapping("/accountVerification")
-    public ResponseEntity<String> verifyAccount(@RequestBody LoginRequest authenticationRequest){
-        authService.verifyAccount(authenticationRequest);
+    public ResponseEntity<String> verifyAccount(String token){
+        authService.verifyAccount(token);
         return new ResponseEntity<>("Account activated successfully",HttpStatus.OK);
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest loginRequest){
+    public AuthenticationResponse login(@RequestBody LoginRequest loginRequest){
         return authService.login(loginRequest);
     }
 }

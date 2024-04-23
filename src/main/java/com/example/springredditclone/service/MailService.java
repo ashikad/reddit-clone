@@ -18,6 +18,7 @@ public class MailService {
     private final MailContentBuilder mailContentBuilder;
     private final JavaMailSender javaMailSender;
 
+
     public void sendMail(NotificationEmail notificationEmail){
         MimeMessagePreparator mimeMessagePreparator = mimeMessage -> {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage);
@@ -30,6 +31,7 @@ public class MailService {
             javaMailSender.send(mimeMessagePreparator);
             log.info("Activation Email Sent");
         } catch (MailException e) {
+            log.error("Exception occured when sending mail"+e);
             throw new SpringRedditException("Exception occured when sending mail");
         }
 
